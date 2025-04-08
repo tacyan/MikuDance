@@ -1,0 +1,695 @@
+src:
+  structure.yaml:
+    content: |-
+      初音ミクPMXモデルダンスシステム
+      
+      概要:
+      - 初音ミクのPMXファイル（3Dモデル）を読み込み、ダンスモーションを適用・編集・再生するシステム
+      - WebGLベースのブラウザアプリケーション
+      - 音楽との同期機能
+      - モーションデータのインポート/エクスポート
+      - カメラアングル調整と照明効果
+      
+      主要機能:
+      - PMXモデルローダー
+      - ダンスモーション管理
+      - タイムライン編集
+      - カメラ制御
+      - 照明効果
+      - 音楽同期
+      - レンダリング設定
+      - プロジェクト保存/読込
+    agent選定理由: "claude-3-5-sonnetは複雑な3Dモデリングシステムの設計とファイル構造を理解し、整理するのに適しています。また、技術的な詳細と創造的な側面のバランスを取るのに優れています。"
+    api選定理由: "API連携は必要ありませんが、WebGL技術とのインテグレーションが必要です。"
+    dependency: []
+    agent: "claude-3-5-sonnet-20241022"
+    api: []
+    
+  models:
+    miku_pmx_loader.js:
+      content: |-
+        PMXモデルローダーモジュール
+        - PMXファイル形式の解析と読み込み
+        - モデルの骨格データ抽出
+        - テクスチャマッピング処理
+        - モーションデータとの連携インターフェース
+        
+        主な関数:
+        - loadPMXFile(file): Promise<PMXModel>
+        - extractBoneStructure(pmxData): BoneHierarchy
+        - mapTextures(pmxData, textureFiles): TexturedModel
+        - prepareForAnimation(model): AnimationReadyModel
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219は複雑なファイル形式の解析と3Dデータ処理の実装に適しています。高度な推論能力と技術的詳細の理解が求められるタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-thinking-exp-1219"
+      api: []
+      
+    pmx_parser.js:
+      content: |-
+        PMXファイル形式パーサー
+        - バイナリデータの解析
+        - モデル構造のマッピング
+        - ボーン階層の構築
+        - 頂点データの処理
+        - マテリアル情報の抽出
+        
+        低レベル処理:
+        - バイナリデータの読み取り
+        - エンディアン処理
+        - 文字コード変換（UTF-16/Shift-JIS対応）
+        - インデックスデータの最適化
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219はバイナリデータ解析とファイル形式の複雑な実装に適しています。論理的思考と詳細な仕様理解が必要なタスクです。"
+      dependency:
+        - src/models/miku_pmx_loader.js
+      agent: "gemini-2.0-flash-thinking-exp-1219" 
+      api: []
+      
+    model_manager.js:
+      content: |-
+        モデル管理システム
+        - 複数PMXモデルの管理
+        - モデル切り替え機能
+        - モデルのプロパティ編集
+        - パーツ表示/非表示切り替え
+        - モデル変形・スケーリング
+        - 衣装変更対応
+        
+        主な機能:
+        - モデルリストの管理
+        - プロパティエディタ連携
+        - モデル状態保存/復元
+        - モデル比較機能
+      agent選定理由: "gemini-2.0-flash-exp は複数モデルの管理システムやデータ構造の設計に適しています。効率的なオブジェクト管理とユーザーインターフェース連携が必要なタスクです。"
+      dependency:
+        - src/models/miku_pmx_loader.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+  
+  animation:
+    motion_controller.js:
+      content: |-
+        モーションコントローラー
+        - ダンスモーションの適用と制御
+        - キーフレームアニメーション処理
+        - 補間計算（線形/ベジェ/エルミート）
+        - ボーン回転・移動の計算
+        - 物理演算（髪/衣装の揺れ）
+        - モーション合成と遷移
+        
+        主要機能:
+        - モーションデータのインポート（VMD形式対応）
+        - ボーン操作の時間軸制御
+        - IK（インバースキネマティクス）処理
+        - 物理ベースアニメーション
+        - カメラワーク制御
+      agent選定理由: "claude-3-5-sonnet-20241022はアニメーション制御システムの複雑な実装に適しています。物理演算や補間計算など、高度な数学的概念の理解と実装が必要なタスクです。"
+      dependency:
+        - src/models/miku_pmx_loader.js
+        - src/physics/physics_engine.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+      
+    timeline_editor.js:
+      content: |-
+        タイムラインエディター
+        - ダンスモーションの時系列編集
+        - キーフレーム追加/削除/編集
+        - モーションのタイミング調整
+        - カーブエディタ（イージング設定）
+        - マルチトラック編集
+        - イベントマーカー設定
+        
+        UI要素:
+        - タイムラインウィジェット
+        - キーフレームセレクター
+        - プロパティエディタ
+        - タイムコントロール
+        - トラック管理パネル
+      agent選定理由: "gemini-2.0-flash-thinking-exp-01-21はUI設計とユーザーインタラクションの実装に優れており、複雑なタイムラインエディタの開発に適しています。"
+      dependency:
+        - src/animation/motion_controller.js
+        - src/ui/ui_components.js
+      agent: "gemini-2.0-flash-thinking-exp-01-21"
+      api: []
+      
+    dance_library.js:
+      content: |-
+        ダンスライブラリモジュール
+        - プリセットダンスモーションの管理
+        - カテゴリ分類（ポップ/ヒップホップ/バレエなど）
+        - モーションの検索と絞り込み
+        - カスタムダンスの保存
+        - モーションのインポート/エクスポート
+        - お気に入り登録機能
+        
+        データ構造:
+        - ダンスモーションメタデータ
+        - プレビュー画像生成
+        - 使用統計トラッキング
+        - バージョン管理
+      agent選定理由: "gemini-2.0-flash-exp はデータ管理とカテゴリ分類システムの設計に適しています。効率的なデータ構造とユーザー向け機能の実装が必要なタスクです。"
+      dependency:
+        - src/animation/motion_controller.js
+        - src/data/storage_manager.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    motion_blender.js:
+      content: |-
+        モーションブレンダーモジュール
+        - 複数モーションの合成
+        - 重み付けブレンディング
+        - トランジション効果
+        - パーツ別モーション適用
+        - エクスプレッション連動
+        - リアルタイムモーション調整
+        
+        アルゴリズム:
+        - 四元数補間（SLERP）
+        - 加重平均計算
+        - タイミング同期
+        - 優先順位付け処理
+      agent選定理由: "claude-3-5-sonnet-20241022は複雑なアニメーションブレンディングアルゴリズムの実装に適しています。数学的概念の深い理解と効率的な実装が必要なタスクです。"
+      dependency:
+        - src/animation/motion_controller.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+  
+  physics:
+    physics_engine.js:
+      content: |-
+        物理演算エンジン
+        - 髪、衣装、アクセサリーの物理挙動
+        - ボーンに連動した動的計算
+        - 衝突検出と応答
+        - バネモデルシミュレーション
+        - 風の効果
+        - パフォーマンス最適化
+        
+        実装詳細:
+        - バーレットフィジックス連携
+        - 剛体/柔体シミュレーション
+        - パーティクルシステム
+        - 計算負荷の動的調整
+      agent選定理由: "deepseek-reasonerは物理シミュレーションの複雑なアルゴリズム設計と実装に最適です。数学的モデルと効率的な計算手法の深い理解が必要なタスクです。"
+      dependency: []
+      agent: "deepseek-reasoner"
+      api: []
+      
+    soft_body_simulator.js:
+      content: |-
+        柔軟体シミュレーター
+        - 布/髪の物理挙動
+        - メッシュベースの変形計算
+        - 自己衝突処理
+        - 外力（重力/風）の影響
+        - 摩擦/弾性パラメーター
+        - LOD（Level of Detail）最適化
+        
+        アルゴリズム:
+        - ポジションベース動力学
+        - マスばねダンパーモデル
+        - 形状維持制約
+        - 衝突応答処理
+      agent選定理由: "deepseek-reasonerは高度な物理シミュレーションと数値計算アルゴリズムの実装に最適です。複雑な数学モデルと最適化手法の理解が必要なタスクです。"
+      dependency:
+        - src/physics/physics_engine.js
+      agent: "deepseek-reasoner"
+      api: []
+  
+  rendering:
+    webgl_renderer.js:
+      content: |-
+        WebGL描画エンジン
+        - 3Dモデルのレンダリング
+        - シェーダープログラム管理
+        - マテリアル処理
+        - ライティング計算
+        - シャドウマッピング
+        - ポストプロセスエフェクト
+        
+        実装内容:
+        - WebGL 2.0 コンテキスト管理
+        - GLSL シェーダー実装
+        - テクスチャ管理
+        - フレームバッファ操作
+        - 描画最適化（カリング/LOD）
+      agent選定理由: "claude-3-5-sonnet-20241022はWebGLとGPUプログラミングの複雑な実装に適しています。グラフィックスパイプラインとシェーダー処理の深い理解が必要なタスクです。"
+      dependency: []
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+      
+    shader_manager.js:
+      content: |-
+        シェーダーマネージャー
+        - GLSLシェーダープログラム管理
+        - シェーディングモデル実装
+          * フォン/ブリン
+          * PBR（物理ベースレンダリング）
+          * トゥーン（セルシェーディング）
+        - エフェクトシェーダー
+          * アウトライン
+          * ブルーム
+          * 被写界深度
+        - シェーダーコンパイル/最適化
+        
+        実装機能:
+        - シェーダーホットリロード
+        - パラメーター調整UI連携
+        - シェーダーバリアント生成
+      agent選定理由: "claude-3-5-sonnet-20241022はGLSLシェーダープログラミングとグラフィックエフェクト実装に適しています。グラフィックスプログラミングの専門知識と創造的な視点が必要なタスクです。"
+      dependency:
+        - src/rendering/webgl_renderer.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+      
+    camera_controller.js:
+      content: |-
+        カメラコントローラー
+        - 視点操作（ズーム/パン/回転）
+        - カメラアニメーション
+        - プリセットカメラアングル
+        - カメラパスの編集
+        - フォーカスポイント設定
+        - カメラ揺れエフェクト
+        
+        操作モード:
+        - オービット（軌道）カメラ
+        - フリーカメラ
+        - ターゲット追従
+        - スクリプト制御カメラ
+      agent選定理由: "gemini-2.0-flash-exp は3Dカメラ制御システムとユーザーインタラクションの実装に適しています。空間的思考と直感的な操作設計が必要なタスクです。"
+      dependency:
+        - src/rendering/webgl_renderer.js
+        - src/animation/timeline_editor.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    effects_processor.js:
+      content: |-
+        エフェクトプロセッサー
+        - ポストプロセスエフェクト
+          * ブルーム/グロー
+          * 被写界深度
+          * モーションブラー
+          * カラーグレーディング
+          * SSAO（スクリーンスペースアンビエントオクルージョン）
+        - パーティクルエフェクト
+          * スパーク/火花
+          * 煙/霧
+          * キラキラ/輝き
+        - 特殊視覚効果
+        
+        実装:
+        - マルチパスレンダリング
+        - フレームバッファ操作
+        - エフェクトチェーン
+      agent選定理由: "claude-3-5-sonnet-20241022は高度なグラフィックエフェクトの実装に適しています。レンダリングパイプラインとエフェクト処理の深い理解が必要なタスクです。"
+      dependency:
+        - src/rendering/webgl_renderer.js
+        - src/rendering/shader_manager.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+      
+    stage_environment.js:
+      content: |-
+        ステージ環境マネージャー
+        - 背景設定（ステージ/風景）
+        - 照明設定
+          * 複数光源管理
+          * カラーと強度
+          * アニメーション
+        - ステージエフェクト
+          * フォグ
+          * 床反射
+          * 背景アニメーション
+        - 環境プリセット
+        
+        機能:
+        - HDRIライティング
+        - 影の設定
+        - 環境マップ
+        - ステージの変更/カスタマイズ
+      agent選定理由: "gemini-2.0-flash-thinking-exp-01-21は3D環境設計と照明システムの実装に適しています。視覚的な要素と技術的な実装のバランスが求められるタスクです。"
+      dependency:
+        - src/rendering/webgl_renderer.js
+        - src/rendering/shader_manager.js
+      agent: "gemini-2.0-flash-thinking-exp-01-21"
+      api: []
+  
+  audio:
+    audio_player.js:
+      content: |-
+        オーディオプレーヤー
+        - 音楽再生制御
+        - 再生/一時停止/シーク
+        - 音量/イコライザー調整
+        - ループ/区間リピート
+        - 再生速度変更
+        - タイムライン連携
+        
+        実装:
+        - Web Audio API活用
+        - 波形表示
+        - BPM検出
+        - ビート同期機能
+      agent選定理由: "gemini-2.0-flash-exp はオーディオ処理とユーザーインターフェース連携の実装に適しています。Web Audio APIの理解と時間ベースの同期機能が必要なタスクです。"
+      dependency:
+        - src/animation/timeline_editor.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    beat_analyzer.js:
+      content: |-
+        ビート解析モジュール
+        - 音楽のビート検出
+        - テンポ（BPM）解析
+        - 音量エンベロープ抽出
+        - フレキエンシースペクトル解析
+        - 特徴点検出
+        - ビート同期イベント発行
+        
+        アルゴリズム:
+        - FFT（高速フーリエ変換）
+        - オンセット検出
+        - ピーク検出
+        - パターン認識
+      agent選定理由: "deepseek-reasonerは音声信号処理と複雑なアルゴリズム実装に最適です。数学的な信号解析と精密な検出アルゴリズムの理解が必要なタスクです。"
+      dependency:
+        - src/audio/audio_player.js
+      agent: "deepseek-reasoner"
+      api: []
+      
+    motion_sync.js:
+      content: |-
+        モーション同期マネージャー
+        - 音楽とダンスの同期
+        - ビートに合わせたモーション調整
+        - タイミングオフセット制御
+        - 自動同期機能
+        - マニュアル調整オプション
+        - リアルタイム適応
+        
+        機能:
+        - キーフレーム時間調整
+        - モーション伸縮処理
+        - ビートマーカー設定
+        - 同期品質フィードバック
+      agent選定理由: "claude-3-5-sonnet-20241022は音楽とアニメーションの複雑な同期システムの実装に適しています。時間ベースの処理と調整機能の設計が必要なタスクです。"
+      dependency:
+        - src/audio/audio_player.js
+        - src/audio/beat_analyzer.js
+        - src/animation/motion_controller.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+  
+  ui:
+    main_interface.js:
+      content: |-
+        メインユーザーインターフェース
+        - アプリケーション全体のレイアウト
+        - 各種パネル配置と管理
+        - レスポンシブデザイン
+        - ダークモード/ライトモード
+        - ショートカットキー管理
+        - UI状態保存/復元
+        
+        コンポーネント:
+        - メインメニュー
+        - ツールバー
+        - ステータスバー
+        - コンテキストメニュー
+        - モーダルダイアログ
+      agent選定理由: "gemini-2.0-flash-thinking-exp-01-21はUIレイアウト設計とユーザー体験の実装に優れています。全体的な構造と操作性の両方を考慮した設計が必要なタスクです。"
+      dependency:
+        - src/ui/ui_components.js
+      agent: "gemini-2.0-flash-thinking-exp-01-21"
+      api: []
+      
+    ui_components.js:
+      content: |-
+        UIコンポーネントライブラリ
+        - カスタムUI要素
+          * スライダー
+          * カラーピッカー
+          * プロパティエディタ
+          * タイムラインウィジェット
+          * ツリービュー
+        - テーマ対応
+        - アクセシビリティ対応
+        - インタラクションフィードバック
+        
+        実装:
+        - コンポーネント階層
+        - イベント処理
+        - データバインディング
+        - 状態管理
+      agent選定理由: "gemini-2.0-flash-exp はUIコンポーネントの設計と実装に適しています。再利用可能なコンポーネント設計とユーザー体験の考慮が必要なタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    property_editor.js:
+      content: |-
+        プロパティエディター
+        - モデル/アニメーション属性編集
+        - パラメーター調整UI
+        - 数値/色/ベクトル入力
+        - プリセット管理
+        - 変更履歴（Undo/Redo）
+        - 値の制約/バリデーション
+        
+        機能:
+        - プロパティグループ化
+        - フィルタリング/検索
+        - ヘルプツールチップ
+        - 単位変換
+      agent選定理由: "gemini-2.0-flash-thinking-exp-01-21はパラメーター編集UIと複雑な値処理の実装に適しています。直感的なインターフェースと正確な値制御の両立が必要なタスクです。"
+      dependency:
+        - src/ui/ui_components.js
+      agent: "gemini-2.0-flash-thinking-exp-01-21"
+      api: []
+  
+  data:
+    project_manager.js:
+      content: |-
+        プロジェクト管理システム
+        - プロジェクトの保存/読込
+        - 自動保存機能
+        - バックアップ作成
+        - プロジェクトメタデータ管理
+        - バージョン管理
+        - プロジェクトテンプレート
+        
+        データ構造:
+        - モデル参照
+        - モーションデータ
+        - カメラ/照明設定
+        - タイムライン情報
+        - エフェクト設定
+      agent選定理由: "gemini-2.0-flash-exp はデータ管理システムとファイル操作の実装に適しています。構造化データの処理と永続化機能の設計が必要なタスクです。"
+      dependency:
+        - src/data/storage_manager.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    storage_manager.js:
+      content: |-
+        ストレージマネージャー
+        - ローカルストレージ管理
+        - IndexedDB活用
+        - ファイルシステムアクセス
+        - クラウドストレージ連携（オプション）
+        - データ圧縮/展開
+        - キャッシュ管理
+        
+        機能:
+        - 非同期データ操作
+        - ストレージ容量管理
+        - エラーハンドリング
+        - データ移行/アップグレード
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219はブラウザストレージと大規模データ管理の実装に適しています。非同期処理と堅牢なデータ操作が必要なタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-thinking-exp-1219"
+      api: []
+      
+    export_manager.js:
+      content: |-
+        エクスポートマネージャー
+        - 動画出力
+          * WebM
+          * MP4
+          * GIF
+        - 画像出力
+          * PNG
+          * JPEG
+          * WebP
+        - モーションデータ出力
+          * VMD
+          * BVH
+        - 設定ファイル出力
+        
+        実装:
+        - エンコーディングオプション
+        - 解像度/フレームレート設定
+        - プログレスフィードバック
+        - バッチ処理
+      agent選定理由: "claude-3-5-sonnet-20241022はメディアエンコーディングと出力フォーマット処理の実装に適しています。複数のファイル形式とエンコーディング処理の理解が必要なタスクです。"
+      dependency:
+        - src/rendering/webgl_renderer.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+  
+  core:
+    app_core.js:
+      content: |-
+        アプリケーションコア
+        - システム初期化
+        - モジュール間連携
+        - イベント管理
+        - エラーハンドリング
+        - パフォーマンスモニタリング
+        - リソース管理
+        
+        機能:
+        - アプリケーションライフサイクル
+        - 設定管理
+        - プラグインシステム
+        - 国際化対応
+      agent選定理由: "claude-3-5-sonnet-20241022はアプリケーションのコアシステムとモジュール連携の実装に適しています。全体のアーキテクチャと拡張性を考慮した設計が必要なタスクです。"
+      dependency:
+        - src/models/model_manager.js
+        - src/animation/motion_controller.js
+        - src/rendering/webgl_renderer.js
+        - src/ui/main_interface.js
+        - src/data/project_manager.js
+      agent: "claude-3-5-sonnet-20241022"
+      api: []
+      
+    event_bus.js:
+      content: |-
+        イベントバスシステム
+        - モジュール間通信
+        - イベント発行/購読
+        - イベントルーティング
+        - イベントフィルタリング
+        - 非同期イベント処理
+        - デバッグ/ロギング機能
+        
+        実装:
+        - パブリッシュ/サブスクライブパターン
+        - イベントキュー
+        - プライオリティ処理
+        - イベントヒストリー
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219はイベント処理システムとモジュール間通信の実装に適しています。非同期通信と効率的なイベント管理が必要なタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-thinking-exp-1219"
+      api: []
+      
+    performance_monitor.js:
+      content: |-
+        パフォーマンスモニタリングシステム
+        - FPS測定
+        - メモリ使用量トラッキング
+        - ボトルネック検出
+        - 自動最適化
+        - パフォーマンスレポート
+        - プロファイリングツール
+        
+        実装:
+        - パフォーマンスAPI活用
+        - メトリクス収集
+        - 可視化ツール
+        - 最適化提案
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219はパフォーマンス計測と最適化機能の実装に適しています。システムリソースの監視と診断機能の設計が必要なタスクです。"
+      dependency:
+        - src/core/app_core.js
+      agent: "gemini-2.0-flash-thinking-exp-1219"
+      api: []
+  
+  util:
+    math_utils.js:
+      content: |-
+        数学ユーティリティ
+        - ベクトル/行列演算
+        - 四元数処理
+        - 補間関数
+        - 衝突検出アルゴリズム
+        - ノイズ関数
+        - スプライン曲線
+        
+        実装:
+        - 高精度計算
+        - 最適化アルゴリズム
+        - 数値安定性対策
+        - WebAssembly最適化（オプション）
+      agent選定理由: "deepseek-reasonerは数学アルゴリズムとユーティリティ関数の実装に最適です。3D数学と計算幾何学の深い理解が必要なタスクです。"
+      dependency: []
+      agent: "deepseek-reasoner"
+      api: []
+      
+    i18n_manager.js:
+      content: |-
+        国際化マネージャー
+        - 多言語対応
+          * 英語
+          * 日本語
+          * 中国語
+          * その他
+        - 言語切替機能
+        - 翻訳リソース管理
+        - フォーマット処理（日付/数値）
+        - RTL言語サポート
+        
+        実装:
+        - 言語リソースローディング
+        - 動的テキスト置換
+        - フォールバック処理
+        - プレースホルダー置換
+      agent選定理由: "gemini-2.0-flash-exp は国際化システムとテキストリソース管理の実装に適しています。多言語対応とリソース管理の設計が必要なタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    settings_manager.js:
+      content: |-
+        設定マネージャー
+        - アプリケーション設定管理
+        - ユーザー設定保存/読込
+        - 設定カテゴリ
+          * 一般設定
+          * レンダリング設定
+          * パフォーマンス設定
+          * インターフェース設定
+        - デフォルト値管理
+        
+        機能:
+        - 設定UI連携
+        - 設定検証
+        - 即時適用/適用後再起動
+        - 設定リセット
+      agent選定理由: "gemini-2.0-flash-exp は設定管理システムとユーザー設定の実装に適しています。設定のカテゴリ化と保存機能の設計が必要なタスクです。"
+      dependency:
+        - src/data/storage_manager.js
+      agent: "gemini-2.0-flash-exp"
+      api: []
+      
+    error_handler.js:
+      content: |-
+        エラーハンドリングシステム
+        - 例外キャッチ/処理
+        - エラーログ記録
+        - ユーザーエラー通知
+        - リカバリー処理
+        - 診断情報収集
+        - バグレポート機能
+        
+        実装:
+        - エラー種別分類
+        - コンテキスト情報収集
+        - エラースタック解析
+        - フォールバック処理
+      agent選定理由: "gemini-2.0-flash-thinking-exp-1219はエラー処理システムと堅牢なアプリケーション設計に適しています。包括的なエラーハンドリングと対応策の実装が必要なタスクです。"
+      dependency: []
+      agent: "gemini-2.0-flash-thinking-exp-1219"
+      api: []
